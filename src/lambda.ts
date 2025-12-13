@@ -6,33 +6,14 @@ import {
 import serverlessExpress from '@vendia/serverless-express';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { HttpExceptionFilter } from './filters/http-exception.filter';
+import { configure } from './main';
 
 let cachedServer: Handler;
 
 async function bootstrap(): Promise<Handler> {
   if (!cachedServer) {
-    const app = await NestFactory.create(
-      AppModule,
-    );
-
-    app.enableCors();
-    app.useGlobalFilters(new HttpExceptionFilter());
-
-    // Swagger
-    const config = new DocumentBuilder()
-      .setTitle('NEBULA API')
-      .setDescription('The official API for NEBULA')
-      .setVersion('1.0')
-      .addBearerAuth(
-        { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
-        'JWT',
-      )
-      .build();
-
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api-docs', app, document);
+    const app = await NestFactory.create(AppModule);
+    configure(app);
 
     await app.init();
     const expressApp = app.getHttpAdapter().getInstance();

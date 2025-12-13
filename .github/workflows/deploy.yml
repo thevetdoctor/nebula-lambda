@@ -1,0 +1,70 @@
+name: SAM Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy SAM stack
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: us-east-1
+      STACK_NAME: nebula-app
+
+    steps:
+      # 1️⃣ Checkout repo
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      # 2️⃣ Configure AWS credentials (stored in GitHub secrets)
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # 3️⃣ Install dependencies
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install NPM packages
+        run: npm ci
+
+      # 5️⃣ Install SAM CLI
+      - name: Install AWS SAM CLI
+        run: |
+          pip install aws-sam-cli
+
+      # 6️⃣ Validate SAM template
+      - name: Validate SAM template
+        run: sam validate
+
+      - name: Remove previous SAM build
+        run: rm -rf .aws-sam
+
+      # 4️⃣ Build your NestJS app for Lambda
+      - name: Build NestJS Lambda
+        run: npm run build
+
+      # 7️⃣ Build SAM package
+      - name: Build SAM package
+        run: sam build
+        # run: sam build --use-container
+
+      # 8️⃣ Deploy SAM stack
+      - name: Deploy SAM stack
+        run: |
+          sam deploy \
+            --stack-name $STACK_NAME \
+            --capabilities CAPABILITY_IAM \
+            --region $AWS_REGION \
+            --no-confirm-changeset \
+            --parameter-overrides CodeVersion=${{ github.sha }}

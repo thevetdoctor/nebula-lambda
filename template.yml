@@ -10,6 +10,10 @@ Globals:
     Architectures:
       - arm64
 
+Parameters:
+  CodeVersion:
+    Type: String
+
 Resources:
   NestHttpApi:
     Type: AWS::Serverless::HttpApi
@@ -47,6 +51,7 @@ Resources:
         Variables:
           NODE_ENV: production
           USE_AWS_DYNAMODB: true
+          CODE_VERSION: !Ref CodeVersion
       Policies:
         - Statement:
             - Effect: Allow
