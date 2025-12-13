@@ -1,0 +1,69 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: NestJS Lambda with HTTP API
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 1024
+    Runtime: nodejs20.x
+    Architectures:
+      - arm64
+
+Resources:
+  NestHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Name: nestjs-http-api
+      StageName: $default
+      CorsConfiguration:
+        AllowMethods: ['*']
+        AllowHeaders: ['*']
+        AllowOrigins: ['*']
+
+  NestAppFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: nestjs-app
+      CodeUri: ./
+      Handler: dist/lambda.handler
+      Events:
+        RootRoute:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref NestHttpApi
+            Path: /
+            Method: ANY
+            PayloadFormatVersion: '2.0'
+
+        ProxyRoute:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref NestHttpApi
+            Path: /{proxy+}
+            Method: ANY
+            PayloadFormatVersion: '2.0'
+      Environment:
+        Variables:
+          NODE_ENV: production
+          USE_AWS_DYNAMODB: true
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:CreateTable
+                - dynamodb:DescribeTable
+                - dynamodb:DeleteTable
+                - dynamodb:ListTables
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+                - dynamodb:UpdateItem
+                - dynamodb:DeleteItem
+                - dynamodb:Scan
+                - dynamodb:Query
+              Resource: arn:aws:dynamodb:us-east-1:121453659747:table/*
+
+Outputs:
+  ApiUrl:
+    Description: HTTP API URL
+    Value: !GetAtt NestHttpApi.ApiEndpoint

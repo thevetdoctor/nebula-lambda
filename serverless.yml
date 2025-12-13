@@ -1,0 +1,22 @@
+# service: nebula-api
+
+# provider:
+#   name: aws
+#   runtime: nodejs18.x
+#   region: us-east-1
+#   environment:
+#     DYNAMODB_TABLE: UsersTable
+#     IS_LOCAL: true
+#     AWS_ACCESS_KEY_ID: local
+#     AWS_SECRET_ACCESS_KEY: local
+
+# plugins:
+#   - serverless-offline
+
+# functions:
+#   api:
+#     handler: dist/lambda.handler
+#     events:
+#       - http:
+#           path: /{proxy+}
+#           method: any
