@@ -37,3 +37,16 @@ export class UserDto {
   })
   email: string;
 }
+
+export class GetUsers {
+  @ApiProperty({ example: '20', description: 'page size', required: false })
+  limit?: string;
+
+  @ApiProperty({
+    example:
+      'eyJjcmVhdGVkQXQiOiIyMDI1LTEyLTE2VDIyOjUwOjA0LjcxOVoiLCJpZCI6IjU4NGE1YmMyLTcwMjAtNDZlMi05M2NjLWU3Y2Q0MDgwNjRiNyJ9:1',
+    description: 'base64 token',
+    required: false,
+  })
+  nextToken?: string;
+}

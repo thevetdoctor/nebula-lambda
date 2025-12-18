@@ -1,6 +1,14 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './user.dto';
+import { CreateUserDto, GetUsers } from './user.dto';
 import { SuccessMessage } from 'src/filters/success-message.decorator';
 
 @Controller('users')
@@ -21,8 +29,8 @@ export class UsersController {
 
   @Get()
   @SuccessMessage('List of users')
-  list() {
-    return this.userService.listUsers();
+  list(@Query() query: GetUsers) {
+    return this.userService.listUsers(query);
   }
 
   @Delete(':id')

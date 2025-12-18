@@ -4,8 +4,14 @@ import {
   PutCommand,
   ScanCommand,
 } from '@aws-sdk/lib-dynamodb';
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { DYNAMODB, userTable } from 'src/constants/environment.';
+import { GetUsers } from './user.dto';
 
 @Injectable()
 export class UsersService {
@@ -44,12 +50,59 @@ export class UsersService {
     }
   }
 
-  async listUsers() {
+  async listUsers({ limit, nextToken }: GetUsers = {}) {
     try {
-      const result = await this.db.send(
-        new ScanCommand({ TableName: userTable }),
+      let prevPage: any = 1;
+      try {
+        const validToken = (val) =>
+          val && val !== 'null' && val !== 'undefined';
+        if (validToken(nextToken)) {
+          const splitToken: any = nextToken?.split(':');
+          nextToken = splitToken[0];
+          prevPage = splitToken[1];
+          nextToken = JSON.parse(
+            Buffer.from(nextToken as string, 'base64').toString('utf-8'),
+          );
+        } else {
+          nextToken = undefined;
+        }
+      } catch (err) {
+        throw new BadRequestException('Invalid pagination token');
+      }
+      const { Count } = await this.db.send(
+        new ScanCommand({
+          TableName: userTable,
+          Select: 'COUNT',
+        }),
       );
-      return { users: result.Items, count: result.Count };
+      const queryPayload: any = {
+        TableName: userTable,
+      };
+      if (nextToken) {
+        queryPayload.ExclusiveStartKey = nextToken;
+      }
+      const parsedLimit = Number(limit ?? '10');
+      if (limit) {
+        queryPayload.Limit = parsedLimit;
+      }
+      const result = await this.db.send(new ScanCommand(queryPayload));
+      const page = !nextToken ? prevPage : Number(prevPage) + 1;
+      nextToken = result.LastEvaluatedKey
+        ? Buffer.from(JSON.stringify(result.LastEvaluatedKey)).toString(
+            'base64',
+          )
+        : undefined;
+      return {
+        users: result.Items,
+        count: result.Items?.length,
+        total: Count,
+        page,
+        pageSize: Number(limit),
+        nextToken:
+          !nextToken || page * Number(limit) === Count
+            ? null
+            : `${nextToken}:${page}`,
+      };
     } catch (error) {
       throw error;
     }
