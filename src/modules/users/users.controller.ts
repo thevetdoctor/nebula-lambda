@@ -8,8 +8,8 @@ import {
   Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto, GetUsers } from './user.dto';
-import { SuccessMessage } from 'src/filters/success-message.decorator';
+import { CreateUserDto, GetUsersDto } from './user.dto';
+import { SuccessMessage } from '../../filters/success-message.decorator';
 
 @Controller('users')
 export class UsersController {
@@ -17,25 +17,25 @@ export class UsersController {
 
   @Get(':id')
   @SuccessMessage('User details')
-  getUser(@Param('id') id: string): Promise<any> {
-    return this.userService.getUser(id);
+  async getUser(@Param('id') id: string): Promise<any> {
+    return await this.userService.getUser(id);
   }
 
   @Post()
   @SuccessMessage('User created successfully')
-  createUser(@Body() createUserDto: CreateUserDto): Promise<any[]> {
-    return this.userService.createUser(createUserDto);
+  async createUser(@Body() createUserDto: CreateUserDto): Promise<any[]> {
+    return await this.userService.createUser(createUserDto);
   }
 
   @Get()
   @SuccessMessage('List of users')
-  list(@Query() query: GetUsers) {
-    return this.userService.listUsers(query);
+  async list(@Query() query: GetUsersDto): Promise<any> {
+    return await this.userService.listUsers(query);
   }
 
   @Delete(':id')
   @SuccessMessage('User deleted successfully')
-  deleteUser(@Param('id') id: string): Promise<void> {
-    return this.userService.deleteUser(id);
+  async deleteUser(@Param('id') id: string): Promise<void> {
+    return await this.userService.deleteUser(id);
   }
 }

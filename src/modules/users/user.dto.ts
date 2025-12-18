@@ -38,7 +38,7 @@ export class UserDto {
   email: string;
 }
 
-export class GetUsers {
+export class GetUsersDto {
   @ApiProperty({ example: '20', description: 'page size', required: false })
   limit?: string;
 

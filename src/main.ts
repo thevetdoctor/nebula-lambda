@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { HttpExceptionFilter } from './filters/http-exception.filter';
-import { appPort } from './constants/environment.';
+import { appPort } from './constants/environment';
 import { SuccessResponseInterceptor } from './filters/success-response.interceptor';
 
 // Swagger and Global Configuration

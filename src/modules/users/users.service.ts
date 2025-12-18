@@ -1,25 +1,18 @@
 import {
-  DeleteCommand,
-  DynamoDBDocumentClient,
-  PutCommand,
-  ScanCommand,
-} from '@aws-sdk/lib-dynamodb';
-import {
   BadRequestException,
-  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { DYNAMODB, userTable } from 'src/constants/environment.';
-import { GetUsers } from './user.dto';
+import { GetUsersDto } from './user.dto';
+import { UsersRepository } from './users.repository';
 
 @Injectable()
 export class UsersService {
-  constructor(@Inject(DYNAMODB) private readonly db: DynamoDBDocumentClient) {}
+  constructor(private readonly usersRepo: UsersRepository) {}
 
-  async getUser(userId: string) {
+  async getUser(userId: string): Promise<any> {
     try {
-      const result = await this.findUserById(userId);
+      const result = await this.usersRepo.findUserById(userId);
       if (!result.Items || result.Items.length === 0) {
         throw new NotFoundException('User not found');
       }
@@ -29,28 +22,23 @@ export class UsersService {
     }
   }
 
-  async createUser(user) {
+  async createUser(user): Promise<any> {
     try {
-      const userExists = await this.findUserByEmail(user.email);
+      const userExists = await this.usersRepo.findUserByEmail(user.email);
       if (userExists.Items && userExists.Items.length > 0) {
         throw new Error('User with this email already exists');
       }
       user.id = crypto.randomUUID();
       user.createdAt = new Date().toISOString();
       user.updatedAt = new Date().toISOString();
-      await this.db.send(
-        new PutCommand({
-          TableName: userTable,
-          Item: user,
-        }),
-      );
-      return user;
+      const createdUser = await this.usersRepo.createUser(user);
+      return createdUser;
     } catch (error) {
       throw error;
     }
   }
 
-  async listUsers({ limit, nextToken }: GetUsers = {}) {
+  async listUsers({ limit, nextToken }: GetUsersDto): Promise<any> {
     try {
       let prevPage: any = 1;
       try {
@@ -69,23 +57,9 @@ export class UsersService {
       } catch (err) {
         throw new BadRequestException('Invalid pagination token');
       }
-      const { Count } = await this.db.send(
-        new ScanCommand({
-          TableName: userTable,
-          Select: 'COUNT',
-        }),
-      );
-      const queryPayload: any = {
-        TableName: userTable,
-      };
-      if (nextToken) {
-        queryPayload.ExclusiveStartKey = nextToken;
-      }
-      const parsedLimit = Number(limit ?? '10');
-      if (limit) {
-        queryPayload.Limit = parsedLimit;
-      }
-      const result = await this.db.send(new ScanCommand(queryPayload));
+      const total = await this.usersRepo.getUsersCount();
+      const result = await this.usersRepo.getAllUsers({ limit, nextToken });
+
       const page = !nextToken ? prevPage : Number(prevPage) + 1;
       nextToken = result.LastEvaluatedKey
         ? Buffer.from(JSON.stringify(result.LastEvaluatedKey)).toString(
@@ -95,11 +69,11 @@ export class UsersService {
       return {
         users: result.Items,
         count: result.Items?.length,
-        total: Count,
+        total,
         page,
         pageSize: Number(limit),
         nextToken:
-          !nextToken || page * Number(limit) === Count
+          !nextToken || page * Number(limit) === total
             ? null
             : `${nextToken}:${page}`,
       };
@@ -108,52 +82,15 @@ export class UsersService {
     }
   }
 
-  async deleteUser(userId: string) {
+  async deleteUser(userId: string): Promise<any> {
     try {
-      const result = await this.findUserById(userId);
+      const result = await this.usersRepo.findUserById(userId);
       if (!result.Items || result.Items.length === 0) {
         throw new NotFoundException('User not found');
       }
-      await this.db.send(
-        new DeleteCommand({
-          TableName: userTable,
-          Key: {
-            id: userId,
-            createdAt: result.Items[0].createdAt,
-          },
-        }),
-      );
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  private async findUserById(userId: string) {
-    try {
-      return await this.db.send(
-        new ScanCommand({
-          TableName: userTable,
-          FilterExpression: 'id = :id',
-          ExpressionAttributeValues: {
-            ':id': userId,
-          },
-        }),
-      );
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  private async findUserByEmail(email: string) {
-    try {
-      return await this.db.send(
-        new ScanCommand({
-          TableName: userTable,
-          FilterExpression: 'email = :email',
-          ExpressionAttributeValues: {
-            ':email': email,
-          },
-        }),
+      await this.usersRepo.deleteUser(
+        result.Items[0].id,
+        result.Items[0].createdAt,
       );
     } catch (error) {
       throw error;

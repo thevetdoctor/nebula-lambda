@@ -1,14 +1,14 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import {
   DynamoDBClient,
   CreateTableCommand,
   DescribeTableCommand,
 } from '@aws-sdk/client-dynamodb';
-import { DYNAMODB, tables } from 'src/constants/environment.';
+import { tables } from '../../constants/environment';
 
 @Injectable()
 export class DynamoDBService implements OnModuleInit {
-  constructor(@Inject(DYNAMODB) private client: DynamoDBClient) {}
+  constructor(private client: DynamoDBClient) {}
 
   async onModuleInit() {
     await this.ensureTables(

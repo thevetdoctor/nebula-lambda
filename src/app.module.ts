@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './modules/users/users.module';
 import { ConfigModule } from '@nestjs/config';
+import { DynamoModule } from './modules/dynamodb/dynamodb.module';
 
 @Module({
   imports: [
@@ -10,6 +11,7 @@ import { ConfigModule } from '@nestjs/config';
       isGlobal: true, // 👈 IMPORTANT
       envFilePath: '.env', // or ['.env', '.env.local']
     }),
+    DynamoModule,
     UsersModule,
   ],
   controllers: [AppController],
