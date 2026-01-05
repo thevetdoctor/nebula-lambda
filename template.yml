@@ -67,7 +67,7 @@ Resources:
         - Statement:
             - Effect: Allow
               Action:
-                # - dynamodb:CreateTable
+                - dynamodb:CreateTable
                 - dynamodb:DescribeTable
                 - dynamodb:DeleteTable
                 - dynamodb:ListTables
