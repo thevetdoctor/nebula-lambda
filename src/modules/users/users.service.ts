@@ -1,14 +1,20 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { GetUsersDto } from './user.dto';
 import { UsersRepository } from './users.repository';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly usersRepo: UsersRepository) {}
+  constructor(
+    private readonly usersRepo: UsersRepository,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+  ) {}
 
   async getUser(userId: string): Promise<any> {
     try {
@@ -57,8 +63,44 @@ export class UsersService {
       } catch (err) {
         throw new BadRequestException('Invalid pagination token');
       }
+
+      const allUsersKey = `users:list:limit=${limit}:token=${nextToken ?? 'first'}`;
+      let users;
+      const cachedUsers = await this.cacheManager.get<string>(allUsersKey);
+      const ttl = await this.cacheManager.ttl(allUsersKey);
+      const remainingTime = () =>
+        `${ttl ? Math.round((ttl - Date.now()) / 1000) : 0}`;
+      if (cachedUsers) {
+        users = cachedUsers;
+        console.log(
+          '✅ Cache Hit:',
+          'users',
+          users.users.length,
+          'total',
+          users.total,
+          'page',
+          users.page,
+          `Remaining: ${remainingTime()}s`,
+        );
+        return cachedUsers;
+      } else {
+        console.log(
+          '✅ Cache Miss:',
+          'users',
+          users?.users.length,
+          'total',
+          users?.total,
+          'page',
+          users?.page,
+          `Remaining: ${remainingTime()}s`,
+        );
+      }
+      const parsedLimit = Number(limit ?? '10');
       const total = await this.usersRepo.getUsersCount();
-      const result = await this.usersRepo.getAllUsers({ limit, nextToken });
+      const result = await this.usersRepo.getAllUsers({
+        limit: parsedLimit,
+        nextToken,
+      });
 
       const page = !nextToken ? prevPage : Number(prevPage) + 1;
       nextToken = result.LastEvaluatedKey
@@ -66,17 +108,19 @@ export class UsersService {
             'base64',
           )
         : undefined;
-      return {
+      const response = {
         users: result.Items,
         count: result.Items?.length,
         total,
         page,
-        pageSize: Number(limit),
+        pageSize: parsedLimit,
         nextToken:
           !nextToken || page * Number(limit) === total
             ? null
             : `${nextToken}:${page}`,
       };
+      await this.cacheManager.set(allUsersKey, response);
+      return response;
     } catch (error) {
       throw error;
     }

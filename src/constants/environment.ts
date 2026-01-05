@@ -15,3 +15,12 @@ export const tables = process.env.TABLES
   ? process.env.TABLES.split(',')
   : ['users', 'orders', 'codes'];
 export const userTable = process.env.DYNAMODB_USERTABLE ?? 'users';
+
+export const redisHost = process.env.REDIS_HOST || 'localhost';
+export const redisPort = process.env.REDIS_PORT
+  ? Number(process.env.REDIS_PORT)
+  : 6379;
+export const redisPassword = process.env.REDIS_PASSWORD || undefined;
+export const cacheTtl = process.env.CACHE_TTL
+  ? Number(process.env.CACHE_TTL)
+  : 30000;

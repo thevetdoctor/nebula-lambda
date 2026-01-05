@@ -3,9 +3,10 @@ import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { DynamoModule } from '../dynamodb/dynamodb.module';
 import { UsersRepository } from './users.repository';
+import { AppCacheModule } from '../cache/cache.module';
 
 @Module({
-  imports: [DynamoModule],
+  imports: [DynamoModule, AppCacheModule],
   controllers: [UsersController],
   providers: [UsersService, UsersRepository],
 })

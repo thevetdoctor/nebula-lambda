@@ -4,6 +4,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { HttpExceptionFilter } from './filters/http-exception.filter';
 import { appPort } from './constants/environment';
 import { SuccessResponseInterceptor } from './filters/success-response.interceptor';
+import { ValidationPipe } from '@nestjs/common';
 
 // Swagger and Global Configuration
 export const configure = (app) => {
@@ -18,6 +19,13 @@ export const configure = (app) => {
     .build();
 
   app.enableCors();
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true, // strips unknown properties
+      forbidNonWhitelisted: true, // throws error for extra fields
+      transform: true, // auto-transform payloads to DTO classes
+    }),
+  );
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(new SuccessResponseInterceptor());
 

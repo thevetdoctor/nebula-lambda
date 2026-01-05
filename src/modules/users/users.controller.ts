@@ -29,7 +29,7 @@ export class UsersController {
 
   @Get()
   @SuccessMessage('List of users')
-  async list(@Query() query: GetUsersDto): Promise<any> {
+  async listUsers(@Query() query: GetUsersDto): Promise<any> {
     return await this.userService.listUsers(query);
   }
 

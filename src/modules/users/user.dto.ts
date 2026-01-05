@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 
 export class CreateUserDto {
   @ApiProperty({ example: 'John', description: 'First name' })
@@ -14,33 +20,30 @@ export class CreateUserDto {
     example: 'john.doe@example.com',
     description: 'Email address',
   })
+  @IsNotEmpty()
   @IsEmail()
   email: string;
 }
 
-export class UserDto {
+export class UserDto extends CreateUserDto {
   @ApiProperty({
     example: '550e8400-e29b-41d4-a716-446655440000',
     description: 'User ID (UUID)',
   })
   id: string;
 
-  @ApiProperty({ example: 'John', description: 'First name' })
-  firstName: string;
+  @ApiProperty({})
+  createdAt: string;
 
-  @ApiProperty({ example: 'Doe', description: 'Last name' })
-  lastName: string;
-
-  @ApiProperty({
-    example: 'john.doe@example.com',
-    description: 'Email address',
-  })
-  email: string;
+  @ApiProperty({})
+  updatedAt: string;
 }
 
 export class GetUsersDto {
   @ApiProperty({ example: '20', description: 'page size', required: false })
-  limit?: string;
+  @IsOptional()
+  @IsString()
+  limit?: string | number;
 
   @ApiProperty({
     example:
@@ -48,5 +51,7 @@ export class GetUsersDto {
     description: 'base64 token',
     required: false,
   })
+  @IsOptional()
+  @IsString()
   nextToken?: string;
 }

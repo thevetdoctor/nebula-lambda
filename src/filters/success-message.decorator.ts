@@ -1,4 +1,3 @@
-// common/decorators/success-message.decorator.ts
 import { SetMetadata } from '@nestjs/common';
 
 export const SUCCESS_MESSAGE_KEY = 'success_message';

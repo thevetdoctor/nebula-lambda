@@ -7,22 +7,6 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
-export class BaseException extends HttpException {
-  protected statusCode: string;
-  constructor(message: string, statusCode: string) {
-    super(message, HttpStatus.NOT_FOUND);
-    this.setStatusCode(statusCode);
-  }
-
-  public getStatusCode(): string {
-    return this.statusCode;
-  }
-
-  public setStatusCode(statusCode: string): void {
-    this.statusCode = statusCode;
-  }
-}
-
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
   catch(exception: any, host: ArgumentsHost) {
@@ -49,7 +33,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       // Generic error (AWS, DynamoDB, etc)
       message = exception?.message || message;
     }
-    console.error('🔥 ERROR CAUGHT:', message);
+    // console.error('🔥 ERROR CAUGHT:', message);
 
     return response.status(status).json({
       success: false,

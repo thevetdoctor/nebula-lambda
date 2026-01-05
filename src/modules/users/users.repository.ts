@@ -2,6 +2,7 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DeleteCommand, PutCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { Injectable } from '@nestjs/common';
 import { userTable } from '../../constants/environment';
+import { GetUsersDto } from './user.dto';
 
 @Injectable()
 export class UsersRepository {
@@ -54,14 +55,10 @@ export class UsersRepository {
   }
 
   async getAllUsers({
-    limit,
+    limit: parsedLimit,
     nextToken,
-  }: {
-    limit?: string;
-    nextToken?: string;
-  }): Promise<any> {
+  }: GetUsersDto): Promise<any> {
     try {
-      const parsedLimit = Number(limit ?? '10');
       const params: any = {
         TableName: userTable,
         Limit: parsedLimit,
