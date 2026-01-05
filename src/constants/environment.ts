@@ -24,3 +24,5 @@ export const redisPassword = process.env.REDIS_PASSWORD || undefined;
 export const cacheTtl = process.env.CACHE_TTL
   ? Number(process.env.CACHE_TTL)
   : 30000;
+export const isLambda = !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+export const redisEnabled = process.env.REDIS_ENABLED === 'true';

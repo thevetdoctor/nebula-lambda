@@ -3,6 +3,8 @@ import { Module } from '@nestjs/common';
 import KeyvRedis from 'keyv-redis';
 import {
   cacheTtl,
+  isLambda,
+  redisEnabled,
   redisHost,
   redisPassword,
   redisPort,
@@ -11,14 +13,21 @@ import {
 @Module({
   imports: [
     CacheModule.registerAsync({
-      useFactory: () => ({
-        store: new KeyvRedis({
-          host: redisHost,
-          port: redisPort,
-          password: redisPassword,
-        }),
-        ttl: cacheTtl, // Keyv expects ms
-      }),
+      useFactory: () => {
+        if (isLambda || !redisEnabled) {
+          return {
+            ttl: cacheTtl,
+          };
+        }
+        return {
+          store: new KeyvRedis({
+            host: redisHost,
+            port: redisPort,
+            password: redisPassword,
+          }),
+          ttl: cacheTtl, // Keyv expects ms
+        };
+      },
     }),
   ],
   exports: [CacheModule],

@@ -95,9 +95,15 @@ describe('Users', () => {
     });
   });
 
-    describe('deleteUser', () => {
+  describe('deleteUser', () => {
     it('should delete a specific user by Id', async () => {
-      const mockUser = { id: '1', name: 'John Doe', email: 'john@doe.com', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+      const mockUser = {
+        id: '1',
+        name: 'John Doe',
+        email: 'john@doe.com',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
       mockDynamoClient.send.mockResolvedValue({});
 
       const result = await provider.deleteUser(mockUser.id, mockUser.createdAt);
