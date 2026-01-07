@@ -1,18 +1,24 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DeleteCommand, PutCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { Injectable } from '@nestjs/common';
-import { userTable } from '../../constants/environment';
 import { GetUsersDto } from './user.dto';
+import { EnvironmentService } from 'src/constants/environment.service';
 
 @Injectable()
 export class UsersRepository {
-  constructor(private readonly db: DynamoDBClient) {}
+  userTable: string;
+  constructor(
+    private readonly db: DynamoDBClient,
+    private env: EnvironmentService,
+  ) {
+    this.userTable = this.env.userTable();
+  }
 
   async findUserById(userId: string): Promise<any> {
     try {
       return await this.db.send(
         new ScanCommand({
-          TableName: userTable,
+          TableName: this.userTable,
           FilterExpression: 'id = :id',
           ExpressionAttributeValues: {
             ':id': userId,
@@ -28,7 +34,7 @@ export class UsersRepository {
     try {
       return await this.db.send(
         new ScanCommand({
-          TableName: userTable,
+          TableName: this.userTable,
           FilterExpression: 'email = :email',
           ExpressionAttributeValues: {
             ':email': email,
@@ -44,7 +50,7 @@ export class UsersRepository {
     try {
       await this.db.send(
         new PutCommand({
-          TableName: userTable,
+          TableName: this.userTable,
           Item: user,
         }),
       );
@@ -60,7 +66,7 @@ export class UsersRepository {
   }: GetUsersDto): Promise<any> {
     try {
       const params: any = {
-        TableName: userTable,
+        TableName: this.userTable,
         Limit: parsedLimit,
       };
       if (nextToken) {
@@ -76,7 +82,7 @@ export class UsersRepository {
     try {
       const { Count } = await this.db.send(
         new ScanCommand({
-          TableName: userTable,
+          TableName: this.userTable,
           Select: 'COUNT',
         }),
       );
@@ -90,7 +96,7 @@ export class UsersRepository {
     try {
       await this.db.send(
         new DeleteCommand({
-          TableName: userTable,
+          TableName: this.userTable,
           Key: {
             id: userId,
             createdAt: createdAt,

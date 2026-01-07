@@ -5,6 +5,8 @@ import { UsersModule } from './modules/users/users.module';
 import { ConfigModule } from '@nestjs/config';
 import { DynamoModule } from './modules/dynamodb/dynamodb.module';
 import { AppCacheModule } from './modules/cache/cache.module';
+import { EnvironmentService } from './constants/environment.service';
+import { EnvironmentModule } from './constants/environment.module';
 
 @Module({
   imports: [
@@ -12,6 +14,7 @@ import { AppCacheModule } from './modules/cache/cache.module';
       isGlobal: true, // 👈 IMPORTANT
       envFilePath: '.env', // or ['.env', '.env.local']
     }),
+    EnvironmentModule,
     DynamoModule,
     UsersModule,
     AppCacheModule,

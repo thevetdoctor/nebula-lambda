@@ -2,9 +2,9 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { HttpExceptionFilter } from './filters/http-exception.filter';
-import { appPort } from './constants/environment';
 import { SuccessResponseInterceptor } from './filters/success-response.interceptor';
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 // Swagger and Global Configuration
 export const configure = (app) => {
@@ -35,6 +35,9 @@ export const configure = (app) => {
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
+
+  const appPort = configService.get<number>('PORT', 3000);
   configure(app);
 
   await app.listen(appPort);
@@ -43,5 +46,4 @@ async function bootstrap() {
   console.log(`Application is running on: ${app_url}`);
   console.log(`Swagger Docs path: ${app_url}/api-docs`);
 }
-
 bootstrap();

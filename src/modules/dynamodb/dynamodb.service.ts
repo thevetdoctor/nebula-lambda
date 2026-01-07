@@ -4,15 +4,18 @@ import {
   CreateTableCommand,
   DescribeTableCommand,
 } from '@aws-sdk/client-dynamodb';
-import { tables } from '../../constants/environment';
+import { EnvironmentService } from 'src/constants/environment.service';
 
 @Injectable()
 export class DynamoDBService implements OnModuleInit {
-  constructor(private client: DynamoDBClient) {}
+  constructor(
+    private client: DynamoDBClient,
+    private env: EnvironmentService,
+  ) {}
 
   async onModuleInit() {
     await this.ensureTables(
-      tables.map((table) => ({ name: table, key: 'id' })),
+      this.env.tables().map((table) => ({ name: table, key: 'id' })),
     );
   }
 

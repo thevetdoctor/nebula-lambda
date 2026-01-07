@@ -1,31 +1,27 @@
 import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 import KeyvRedis from 'keyv-redis';
-import {
-  cacheTtl,
-  isLambda,
-  redisEnabled,
-  redisHost,
-  redisPassword,
-  redisPort,
-} from '../../constants/environment';
+import { EnvironmentModule } from 'src/constants/environment.module';
+import { EnvironmentService } from 'src/constants/environment.service';
 
 @Module({
   imports: [
     CacheModule.registerAsync({
-      useFactory: () => {
-        if (isLambda || !redisEnabled) {
+      imports: [EnvironmentModule],
+      inject: [EnvironmentService],
+      useFactory: (env: EnvironmentService) => {
+        if (env.isLambda() || !env.redisEnabled()) {
           return {
-            ttl: cacheTtl,
+            ttl: env.cacheTtl(),
           };
         }
         return {
           store: new KeyvRedis({
-            host: redisHost,
-            port: redisPort,
-            password: redisPassword,
+            host: env.redisHost(),
+            port: env.redisPort(),
+            password: env.redisPassword(),
           }),
-          ttl: cacheTtl, // Keyv expects ms
+          ttl: env.cacheTtl(), // Keyv expects ms
         };
       },
     }),
